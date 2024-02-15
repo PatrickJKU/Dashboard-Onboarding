@@ -1,6 +1,9 @@
 # Dashboard-Onboarding
 Leverage the power of LLMs in an onboarding process for PowerBI dashboards.
 
+The environment file is designed such that both frameworks are working properly. If you only plan on using the GPT4 Assistant it is not recommended to use it, since not many packages and dependencies are required. However if you wish to use GraphText it might save a lot of time using this environment file. 
+
+# GPT4 Assistant
 ## Instructions
 Make sure to have your OpenAI API Key stored in the system environments variable as "OPEN_AI_API_KEY", or change the code part according to your specified name. 
 This notebook will create an OpenAI Assistant that serves as a bot during an onboarding process. It creates exercises based on your level of expertise and helps you solve them. 
@@ -14,3 +17,5 @@ Currently the bot shows very high variance in different onboarding conversations
 ## Further Work
 Make the tour less expensive by capping the maximum number of generated tokens per message. 
 Give more detailed explanation to the bot to ensure it can catch false statements about the dashboard and correct the user. 
+
+# GraphText
