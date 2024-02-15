@@ -1,0 +1,12 @@
+name: GPT_ast
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - openai
+  - shelve
+  - dotenv
+  - os
+  - time
+  - pandas
+  - json
