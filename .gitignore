@@ -1,0 +1,5 @@
+#Threads
+*.bak
+*.dat
+*.dir
+threads.json
