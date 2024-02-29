@@ -10,6 +10,7 @@ import gradio as gr
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
+threads_dir = "GPT_Threads"
 
 # this code might need optimization - very simple solution but works for now
 """
@@ -25,10 +26,19 @@ thread_dict = {
     "assistant_id": []  
 }
 
+# Check if the directory exists
+if not os.path.exists(threads_dir):
+    # Create the directory
+    # os.makedirs creates all intermediate-level directories needed to contain the leaf directory
+    os.makedirs(threads_dir)
+    print(f"Directory '{threads_dir}' was created.")
+else:
+    print(f"Directory '{threads_dir}' already exists. Loading threads...")
+
 # check if already threads exist
-if os.path.exists("GPT_Threads\\threads.json"):
+if os.path.exists("threads_dir" + "\\threads.json"):
     # load exisiting thread
-    with open('GPT_Threads\\threads.json') as json_file:
+    with open(threads_dir + '\\threads.json') as json_file:
         data = json.load(json_file)  # this is a list of dictionaries
         for elem in data: 
             thread_dict["thread_id"].append(elem["thread_id"])
@@ -37,6 +47,7 @@ if os.path.exists("GPT_Threads\\threads.json"):
             thread_dict["prompt"].append(elem["prompt"])
             thread_dict["answer"].append(elem["answer"])
             thread_dict["user_id"].append(elem["user_id"])
+    print("threads loaded")
 
 # Thread management
 def check_if_thread_exists(user_id):
@@ -57,7 +68,7 @@ def save_thread(user_id, data_user, data_assistant):
     thread_dict["user_id"].append(user_id)
 
     df = pd.DataFrame(thread_dict)  # probably also a more neat solution without this step available
-    df.to_json("GPT_Threads\\threads.json", orient="records", indent=2)
+    df.to_json(threads_dir + "\\threads.json", orient="records", indent=2)
 
 # Generate response
 def generate_response(message_body, user_id, name):
