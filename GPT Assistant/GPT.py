@@ -50,6 +50,26 @@ if os.path.exists("threads_dir" + "\\threads.json"):
     print("threads loaded")
 
 # Thread management
+
+def thread_management(user_id, name):
+
+    if user_id == "" or name == "":
+        return None, None, "Invalid User ID or name"
+    thread_id = check_if_thread_exists(user_id)
+
+    # If a thread doesn't exist, create one and store it
+    if thread_id is None:
+        msg=f"Created new thread for user_id {user_id} - Welcome {name}!"
+        thread = client.beta.threads.create()
+        store_thread(user_id, thread.id)
+        thread_id = thread.id
+
+    # Otherwise, retrieve the existing thread
+    else:
+        msg=f"Found existing thread for user ID {user_id} - Welcome Back {name}!"
+        thread = client.beta.threads.retrieve(thread_id)
+    return thread_id, thread, msg
+
 def check_if_thread_exists(user_id):
     with shelve.open("threads_db") as threads_shelf:
         return threads_shelf.get(user_id, None)
@@ -68,24 +88,14 @@ def save_thread(user_id, data_user, data_assistant):
     thread_dict["user_id"].append(user_id)
 
     df = pd.DataFrame(thread_dict)  # probably also a more neat solution without this step available
-    df.to_json(threads_dir + "\\threads.json", orient="records", indent=2)
+    df.to_json("GPT_Threads\\threads.json", orient="records", indent=2)
 
 # Generate response
-def generate_response(message_body, user_id, name):
-    # Check if there is already a thread_id for the user_id
-    thread_id = check_if_thread_exists(user_id)
-
-    # If a thread doesn't exist, create one and store it
-    if thread_id is None:
-        print(f"Creating new thread for {name} with user_id {user_id}")
-        thread = client.beta.threads.create()
-        store_thread(user_id, thread.id)
-        thread_id = thread.id
-
-    # Otherwise, retrieve the existing thread
-    else:
-        print(f"Retrieving existing thread for {name} with user_id {user_id}")
-        thread = client.beta.threads.retrieve(thread_id)
+def generate_response(user_id, name, message_body):
+    
+    thread_id, thread, _ = thread_management(user_id, name)
+    if thread_id is None: 
+        return "invalid request"
 
     # Add message to thread
     message = client.beta.threads.messages.create(
@@ -130,10 +140,43 @@ def run_assistant(user_id, thread):
     return new_message
 
 
-demo = gr.Interface(
-    fn=generate_response,
-    inputs=["text", "text", "text"],
-    outputs=["text"],
-)
+theme = gr.themes.Monochrome(radius_size="md", spacing_size="lg")
+
+with gr.Blocks(theme=theme) as demo:
+
+    gr.Markdown("# Welcome to PowerBI Onboarding!")
+    greet = gr.Markdown("Please enter your User Name and ID")
+    user_info = gr.Markdown(visible=False)
+
+    with gr.Column(visible=True) as user_int:
+        userid = gr.Textbox(label="User ID")
+        name = gr.Textbox(label="User Name")
+        button_submit = gr.Button("Submit")
+
+    thread_msg = gr.Markdown(label="Thread")
+    message = gr.Textbox(label="Message", visible=False)
+
+    # Define the function and its inputs and outputs
+    with gr.Row(visible=False) as btn_int:
+        button_send = gr.Button("Send")
+        button_clear = gr.ClearButton([message])
+    bot = gr.Textbox(label="Chat Bot", visible=False)
+
+    def submit(userid, name):
+        if len(name) == 0:    
+            return "Empty name or ID"
+        time.sleep(2)
+        return {btn_int: gr.Row(visible=True),
+                message: gr.Textbox(visible=True),
+                bot: gr.Textbox(visible=True),
+                user_int: gr.Column(visible=False),
+            
+                greet: gr.Markdown(visible=False),
+                user_info: gr.Markdown(f"{name} with User ID: {userid}", visible=True)
+                }
+
+    button_submit.click(fn=thread_management, inputs=[userid, name], outputs=[gr.Text(visible=False), gr.Text(visible=False), thread_msg])
+    button_submit.click(fn=submit, inputs=[userid, name], outputs=[btn_int, message, bot, user_int, greet, user_info])
+    button_send.click(fn=generate_response, inputs=[userid, name, message], outputs=bot)
 
 demo.launch()
