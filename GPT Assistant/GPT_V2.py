@@ -1,4 +1,4 @@
-from openai import OpenAI  # require v1.2.0 
+from openai import OpenAI  # require v1.33
 import shelve
 from dotenv import load_dotenv
 import os
@@ -8,14 +8,10 @@ import json
 import gradio as gr
 
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPEN_API_KEY_Bsc")
 client = OpenAI(api_key=OPENAI_API_KEY)
 threads_dir = "GPT_Threads"
 
-# this code might need optimization - very simple solution but works for now
-"""
-creates a new thread file to store conversations, or loads old conversations if they exist
-"""
 # initialize thread dict
 thread_dict = {
     "prompt": [],
@@ -36,7 +32,7 @@ else:
     print(f"Directory '{threads_dir}' already exists. Loading threads...")
 
 # check if already threads exist
-if os.path.exists("threads_dir" + "\\threads.json"):
+if os.path.exists(threads_dir + "\\threads.json"):
     # load exisiting thread
     with open(threads_dir + '\\threads.json') as json_file:
         data = json.load(json_file)  # this is a list of dictionaries
@@ -91,7 +87,7 @@ def save_thread(user_id, data_user, data_assistant):
     df.to_json("GPT_Threads\\threads.json", orient="records", indent=2)
 
 # Generate response
-def generate_response(user_id, name, message_body):
+def generate_response(user_id, name, message_body, temp, assistant_level):
     
     thread_id, thread, _ = thread_management(user_id, name)
     if thread_id is None: 
@@ -105,42 +101,42 @@ def generate_response(user_id, name, message_body):
     )
 
     # Run the assistant and get the new message
-    new_message = run_assistant(user_id, thread)
-    print(f"To {name}:", new_message)
+    print(assistant_level)
+    # Run the assistant and get the new message
+    new_message = run_assistant(user_id, thread, temp, assistant_level)
     return new_message
 
 # Run assistant
-def run_assistant(user_id, thread):
+def run_assistant(user_id, thread, temp, assistant_level="Novice"):
     # Retrieve the created assistant or paste the id of any other available assistant instead of "assistant_glob.id"
-
-    # Onboarding bot: asst_CzAZx0pbuCdy57fd18DFWZEB
-    # Dashboard Onboarding Assistant: asst_irK6D1q8nwG8JTHN21ykPURB
-
-    assistant = client.beta.assistants.retrieve("asst_KfZYtD7IwosiNbA8DBwTJ8Pp")
+    assistants = client.beta.assistants.list().data
+    for assistant in assistants:
+        if assistant.name == assistant_level+ "_Bot":
+            break
+    assistant = client.beta.assistants.update(
+        assistant_id=assistant.id,
+        temperature=temp
+)
 
     # Run the assistant
-    run = client.beta.threads.runs.create(
+    run = client.beta.threads.runs.create_and_poll(
         thread_id=thread.id,
         assistant_id=assistant.id,
     )
 
-    # Wait for completion
-    while run.status != "completed":
-        time.sleep(0.5)
-        run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-
     # Retrieve the Messages
-    messages = client.beta.threads.messages.list(thread_id=thread.id)
-    new_message = messages.data[0].content[0].text.value
+    messages = client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id)
+    new_message = messages.data[0].content[0].text
 
     data_assistant = client.beta.threads.messages.list(thread_id=thread.id).data[0]
     data_user = client.beta.threads.messages.list(thread_id=thread.id).data[1]
 
     save_thread(user_id, data_user, data_assistant)
-    return new_message
+    return new_message.value
 
 
 theme = gr.themes.Monochrome(radius_size="md", spacing_size="lg")
+assistant_levels = ["Novice", "Interm", "Expert"]
 
 with gr.Blocks(theme=theme) as demo:
 
@@ -160,8 +156,10 @@ with gr.Blocks(theme=theme) as demo:
     with gr.Row(visible=False) as btn_int:
         button_send = gr.Button("Send")
         button_clear = gr.ClearButton([message])
+        temp = gr.Slider(minimum=0, maximum=2, step=0.1, value=1, interactive=True, label="Temperature")  # for testing purpose only
+        assistant_level = gr.Radio(choices=assistant_levels, label="Choose Your Visual Literacy")
     bot = gr.Textbox(label="Chat Bot", visible=False)
-
+    
     def submit(userid, name):
         if len(name) == 0:    
             return "Empty name or ID"
@@ -170,13 +168,14 @@ with gr.Blocks(theme=theme) as demo:
                 message: gr.Textbox(visible=True),
                 bot: gr.Textbox(visible=True),
                 user_int: gr.Column(visible=False),
+                temp: gr.Slider(visible=True),
             
                 greet: gr.Markdown(visible=False),
                 user_info: gr.Markdown(f"{name} with User ID: {userid}", visible=True)
                 }
 
     button_submit.click(fn=thread_management, inputs=[userid, name], outputs=[gr.Text(visible=False), gr.Text(visible=False), thread_msg])
-    button_submit.click(fn=submit, inputs=[userid, name], outputs=[btn_int, message, bot, user_int, greet, user_info])
-    button_send.click(fn=generate_response, inputs=[userid, name, message], outputs=bot)
+    button_submit.click(fn=submit, inputs=[userid, name], outputs=[btn_int, message, bot, user_int, greet, user_info, temp])
+    button_send.click(fn=generate_response, inputs=[userid, name, message, temp, assistant_level], outputs=bot)
 
 demo.launch()

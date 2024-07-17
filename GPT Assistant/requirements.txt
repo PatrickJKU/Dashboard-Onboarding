@@ -1,0 +1,8 @@
+openai == 1.33
+shelve
+dotenv
+os
+time
+pandas
+json
+gradio
