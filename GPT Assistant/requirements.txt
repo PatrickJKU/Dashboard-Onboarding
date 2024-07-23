@@ -1,8 +1,4 @@
-openai == 1.33
-shelve
-dotenv
-os
-time
+openai
+python-dotenv
 pandas
-json
 gradio

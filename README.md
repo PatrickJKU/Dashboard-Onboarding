@@ -1,38 +1,14 @@
 # Dashboard-Onboarding
 Leverage the power of LLMs in an onboarding process for PowerBI dashboards.
 
-The environment file is designed such that both frameworks are working properly. If you only plan on using the GPT4 Assistant it is not recommended to use it, since not many packages and dependencies are required. However if you wish to use GraphText it might save a lot of time using this environment file. 
+# Usage
+This repository contains scripts to run an assistant for PowerBI dashboard onboarding. 
 
-# GPT4 Assistant
-## Instructions
-Make sure to have your OpenAI API Key stored in the system environments variable as "OPENAI_API_KEY", or change the code part according to your specified name. 
+## Requirements
+You need an OpenAI API Key. Either use one from your organization or create your own. You can find more information about billing etc. on the official OpenAI Webpage.
+To create your own key, log in to OpenAI with your account and go to [OpenAI API Keys](https://platform.openai.com/api-keys). Copy the secret key ID. Next go to your Workstation's "Environment Variables" and add the variable named "OPENAI_API_KEY", paste your secret key in the value field. The application will now have access to your OPENAI API profile to upload files and create assistants.
 
-### Create an Assistant
-If you want to create a new assistant use the provided jupyter notebook. Copy the files you want to use for your assistant into GPT Assistant/Dashboard Files, recommended are JSON files containing information about elements of the dashboard and csv files containing triggered action - state pairs to navigate the dashboard. 
-Give your assistant a name and change the instruction prompt according to your specific needs. Leave it as it is if you just want to set up the dashboard assistant.
-Now just execute the first five cells of the notebook and check on the openAI website if your assistant has been created successfully. [OpenAI Assistants](https://platform.openai.com/assistants)
-
-
-### Use an exisiting Assistant
-If you already have a working assistant, you can start using it by setting it in different ways. 
-- Use in jupyter notebook
-Run the notebook and start talkin to the GPT with the "generate_response" function like provided in the examples at the bottom of the notebook. 
-- Use Grado interface
-You can also use the embedded grado interface of the notebook for your conversation
-- Use Grado web interface
-Note that this is only possible with conda environments atm. 
-If you do not want to use the notebook, you can start the assistant via Dashboard_Onboarding_conda.bat. This will open the web interface, but you have to follow some setup steps first
-
-Open the GPT.py file and paste the id of your assistant into line 98 to retrieve the correct one. 
-Locate your conda installation path and copy it. Open Dashboard_Onboarding_conda.bat and paste the path in line 2. Change the environment name in line 4 to the conda environment name you are working in. It is recommended to use the provided .yml file in this case. 
-
-You can now execute the batch file, it will open the local server where Grado is running. Refresh the page after some seconds in order to see the interface. Enter your username and id and start chatting!
-
-## Limitations
-Currently the bot shows very high variance in different onboarding conversations at the same expertise level, which might result in high variance in terms of user satisfaction. Also if the user makes wrong statesments about the specific dashboard, it is likely that the bot cannot catch them due to the lack of underlying data. However the tour through PowerBI in general and applying it on the sample dashboard gives very good instructions and feeling of making progress. 
-
-## Further Work
-Make the tour less expensive by capping the maximum number of generated tokens per message. 
-Give more detailed explanation to the bot to ensure it can catch false statements about the dashboard and correct the user. 
-
-# GraphText
+## Create the .exe 
+to create the executable, you will need to install the python environment from the .yml file in this repository. It contains the package "pyinstaller" that is used to bundle python files to executables. 
+Open a terminal in the directory you cloned this repository into, make sure the provided environment is active. Now call `pyinstaller --clean GPT_V2.spec`. This command will run several minutes to create your portable application. After the creation is finished you can find your .exe file in the newly created *dist* folder. 
+**Note** The *GPT_V2.exe* file needs to be in the same directory as the two folders *Dashboard Files* and *Instructions* in order to run properly. Sharing these three items results in a working environment without the need of additional frameworks. 

@@ -11,5 +11,6 @@ rem Activate the conda environment
 call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
 
 rem Run a python script in that environment
-python -m webbrowser http://127.0.0.1:7860
-python GPT.py
+
+python GPT_V2.py
+pause

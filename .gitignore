@@ -1,5 +1,6 @@
-#Threads
 *.bak
 *.dat
 *.dir
 threads.json
+Archiv
+*.exe
