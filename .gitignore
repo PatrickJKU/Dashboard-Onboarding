@@ -5,4 +5,9 @@ threads.json
 Archiv/
 *.exe
 logs.txt
+*.mp4
+*.zip
+build/
+dist/
+
 

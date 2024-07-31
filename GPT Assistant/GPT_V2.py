@@ -59,7 +59,7 @@ def thread_management(user_id, name):
 
     # If a thread doesn't exist, create one and store it
     if thread_id is None:
-        msg=f"Created new thread for user_id {user_id} - Welcome {name}!"
+        msg=f"Created new thread for user ID {user_id} - Welcome {name}!"
         thread = client.beta.threads.create()
         store_thread(user_id, thread.id)
         thread_id = thread.id
@@ -275,7 +275,7 @@ assistant_levels = ["Novice", "Interm", "Expert"]
 with gr.Blocks(theme=theme) as demo:
 
     gr.Markdown("# Welcome to PowerBI Onboarding!")
-    greet = gr.Markdown("Please enter your User Name and ID")
+    greet = gr.Markdown("Please enter your User ID and Name")
     user_info = gr.Markdown(visible=False)
 
     with gr.Column(visible=True) as user_int:
@@ -290,7 +290,7 @@ with gr.Blocks(theme=theme) as demo:
     with gr.Row(visible=False) as btn_int:
         button_send = gr.Button("Send")
         button_clear = gr.ClearButton([message])
-        temp = gr.Slider(minimum=0, maximum=2, step=0.1, value=1, interactive=True, label="Temperature")  # for testing purpose only
+        temp = gr.Slider(minimum=0, maximum=2, step=0.1, value=0.5, interactive=True, label="Temperature")  # for testing purpose only
         assistant_level = gr.Radio(choices=assistant_levels, label="Choose Your Visual Literacy")
     bot = gr.Textbox(label="Chat Bot", visible=False)
     
